@@ -1,0 +1,58 @@
+1-10x10 tahta,direction bilgisi alıyor, başta rastgele oluşan noktalar var, hedefe ulaş, c araç, f bitiş, r almazsa inbutlar uygulanmıyor,
+r de girilince input uygulanır, ulaştıysan blok costlarını topla ve yol maliyetini hesapla, yanlış ise hata mesajı bildir, BOŞLUK İÇİN NOKTA
+YOL İÇİN TİRE 
+
+2- Görevin bir c fonksiyonu yazmak. Parametre olarak bir integer array ve 1 integer değişken almalı. 
+Arrayin içinde gezip integer değişkene en yakın elemanını döndürecek recursive bir c fonksiyonu olmalı. Unutma, array sıralı olmak zorunda değil
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+You are asked to develope a simple game to help children practice basic direction. The game is played on 10x10 grid board where a car and a finish
+line are randomly placed. The player inputs a sequence of directions (up, down, left, right) to move the car towards to finish line. If the car
+reaches the finish line after following the sequence of directions, the game is won. However, if the car fails the reach the finish line, the game
+the game restarts. 
+You are required to implement four functions: void initBoard(struct block board[ROW][COLUMN]),void printBoard(struct block board[ROW][COLUMN]),
+void printMoves(char moves[]) and gamePlay().
+
+
+
+
+
+
+
+
+
+

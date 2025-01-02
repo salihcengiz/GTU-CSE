@@ -1,0 +1,10 @@
+1-) int array alacak
+kaç int asal döndürecek
+asallığa başka fonk haber verecek
+
+2-)fonksiyon double array alacak, 5 double isteyip arraya dolduracak
+
+3-)Fonksşyon 2 double  arrayi ve 1 result arrayı alıyor, 1 ve 2. arrayleri karşılaştırıp result arrayine elemeanı büyük olanı alıyor, 
+mainde printliyor
+
+4-)fonksiyon 2 char array alıyor, biri uzun biri kısa, uzun olanın içinde diğer arayı arayacak, varsa pozisyonunu dödürmek.
