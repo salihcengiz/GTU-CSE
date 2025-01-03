@@ -1,0 +1,1 @@
+This is the content of the input file. It should have more than 100 characters so that the function works properly.
