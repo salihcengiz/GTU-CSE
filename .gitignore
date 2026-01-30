@@ -1,0 +1,159 @@
+# ===========================
+# GTU-CSE .gitignore
+# ===========================
+
+# ===========================
+# Compiled Files
+# ===========================
+*.exe
+*.out
+*.o
+*.obj
+*.class
+*.pyc
+*.pyo
+__pycache__/
+*.dll
+*.so
+*.dylib
+
+# ===========================
+# IDE & Editor Files
+# ===========================
+# Visual Studio Code
+.vscode/
+*.code-workspace
+
+# Visual Studio
+.vs/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# JetBrains (IntelliJ, PyCharm, CLion)
+.idea/
+*.iml
+*.ipr
+*.iws
+out/
+
+# Eclipse
+.project
+.classpath
+.settings/
+
+# Sublime Text
+*.sublime-project
+*.sublime-workspace
+
+# ===========================
+# OS Generated Files
+# ===========================
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+
+# Linux
+*~
+.directory
+
+# ===========================
+# Build & Output Directories
+# ===========================
+build/
+dist/
+target/
+bin/
+out/
+Release/
+Debug/
+x64/
+x86/
+
+# ===========================
+# Package Managers
+# ===========================
+# Node.js
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Python
+venv/
+env/
+.env/
+*.egg-info/
+pip-log.txt
+
+# ===========================
+# Temporary & Log Files
+# ===========================
+*.log
+*.tmp
+*.temp
+*.swp
+*.swo
+*.bak
+*.cache
+logs/
+tmp/
+temp/
+
+# ===========================
+# Sensitive Information
+# ===========================
+*.env
+.env.local
+.env.development
+.env.production
+secrets.json
+credentials.json
+config.local.*
+
+# ===========================
+# Test Coverage
+# ===========================
+.coverage
+htmlcov/
+.pytest_cache/
+.tox/
+
+# ===========================
+# Jupyter Notebooks
+# ===========================
+.ipynb_checkpoints/
+*.ipynb_checkpoints
+
+# ===========================
+# LaTeX
+# ===========================
+*.aux
+*.lof
+*.log
+*.lot
+*.fls
+*.toc
+*.fmt
+*.fot
+*.cb
+*.cb2
+*.synctex.gz
+
+# ===========================
+# Archive Files (Optional)
+# ===========================
+# Uncomment if you don't want to track archives
+# *.zip
+# *.rar
+# *.7z
+# *.tar.gz
