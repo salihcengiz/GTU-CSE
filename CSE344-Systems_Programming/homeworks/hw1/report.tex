@@ -1,0 +1,316 @@
+\documentclass[12pt,a4paper]{article}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage[margin=2.5cm]{geometry}
+\usepackage{graphicx}
+\usepackage{hyperref}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{booktabs}
+\usepackage{enumitem}
+\usepackage{parskip}
+\usepackage{fancyhdr}
+\usepackage{titlesec}
+
+\hypersetup{
+    colorlinks=true,
+    linkcolor=blue!60!black,
+    urlcolor=blue!60!black
+}
+
+\lstset{
+    basicstyle=\ttfamily\small,
+    backgroundcolor=\color{gray!8},
+    frame=single,
+    rulecolor=\color{gray!40},
+    breaklines=true,
+    breakatwhitespace=true,
+    showstringspaces=false,
+    tabsize=4,
+    language=C,
+    keywordstyle=\color{blue!70!black}\bfseries,
+    commentstyle=\color{green!50!black}\itshape,
+    stringstyle=\color{red!60!black},
+    columns=fullflexible,
+    keepspaces=true
+}
+
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\small CSE344 -- System Programming}
+\fancyhead[R]{\small Homework \#1}
+\fancyfoot[C]{\thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+
+\titleformat{\section}{\Large\bfseries}{}{0em}{}[\vspace{-0.5em}\rule{\textwidth}{0.4pt}]
+\titleformat{\subsection}{\large\bfseries}{}{0em}{}
+
+\begin{document}
+
+\begin{titlepage}
+    \centering
+    \vspace*{3cm}
+    {\Huge\bfseries CSE344 -- System Programming\\[0.3cm]
+    Homework \#1 Report\par}
+    \vspace{1.5cm}
+    {\LARGE\texttt{myFind} -- Advanced File Search Program\par}
+    \vspace{2cm}
+    {\Large Spring 2026\par}
+    \vfill
+\end{titlepage}
+
+\tableofcontents
+\newpage
+
+%% ──────────────────────────────────────────────
+\section{Problem Description}
+
+The objective of this homework is to implement an advanced file search program called \texttt{myFind} for POSIX-compatible operating systems. The program recursively traverses a given directory tree and searches for files matching user-specified criteria. Results are displayed in a formatted tree structure. The program is written in C using only POSIX system calls and standard library functions.
+
+%% ──────────────────────────────────────────────
+\section{How I Solved the Problem}
+
+\subsection{Overall Architecture}
+
+The program follows a pipeline architecture with clearly separated responsibilities:
+
+\begin{lstlisting}[language={},numbers=none]
+main()
+  |-- Argument Parsing     (getopt)
+  |-- Signal Setup          (sigaction for SIGINT)
+  |-- Recursive Search      (opendir / readdir / lstat)
+  |     |-- Filter Engine   (matches_criteria)
+  |     |     |-- match_name()   (custom regex with '+')
+  |     |     |-- match_size()   (exact byte comparison)
+  |     |     |-- match_type()   (POSIX S_IS* macros)
+  |     |     |-- match_perm()   (permission bitmask comparison)
+  |     |     |-- match_links()  (hard link count comparison)
+  |     |-- Tree Builder    (linked list with ancestor marking)
+  |-- Result Printer        (formatted tree output)
+  |-- Cleanup               (free all allocated memory)
+\end{lstlisting}
+
+\subsection{Data Structures}
+
+Two primary structures are used:
+
+\textbf{SearchCriteria:} Holds all filter values and \texttt{use\_*} flags indicating which filters are active. This allows any combination of filters to be applied using AND logic.
+
+\begin{lstlisting}
+typedef struct {
+    char *filename_pattern;   // -f filter value
+    off_t file_size;          // -b filter value
+    char file_type;           // -t filter value
+    char permissions[10];     // -p filter value
+    int link_count;           // -l filter value
+    int use_name, use_size, use_type, use_perm, use_links;
+} SearchCriteria;
+\end{lstlisting}
+
+\textbf{TreeNode:} A singly linked list node used to collect directory traversal results. Each node stores the entry name, its depth in the tree, and an \texttt{is\_dir} flag with three states:
+
+\begin{itemize}[nosep]
+    \item \texttt{0} = matching file (always printed)
+    \item \texttt{1} = directory (not yet marked for printing)
+    \item \texttt{2} = directory (marked for printing --- either matches criteria or is an ancestor of a matching file)
+\end{itemize}
+
+\begin{lstlisting}
+typedef struct TreeNode {
+    char *name;
+    int depth;
+    int is_dir;
+    struct TreeNode *next;
+} TreeNode;
+\end{lstlisting}
+
+\subsection{Algorithm Flow}
+
+\begin{enumerate}[nosep]
+    \item \textbf{Argument Parsing:} \texttt{getopt()} processes \texttt{-w}, \texttt{-f}, \texttt{-b}, \texttt{-t}, \texttt{-p}, \texttt{-l} options. The program validates that \texttt{-w} is provided and at least one filter is active.
+
+    \item \textbf{Signal Handling:} A \texttt{SIGINT} handler is installed via \texttt{sigaction()}. It sets a \texttt{volatile sig\_atomic\_t} flag. The main loop checks this flag at each iteration and exits gracefully when interrupted.
+
+    \item \textbf{Recursive Directory Traversal:} The \texttt{search\_recursive()} function:
+    \begin{itemize}[nosep]
+        \item Opens the directory with \texttt{opendir()}
+        \item Adds the directory as a hidden node (\texttt{is\_dir=1}) to the linked list
+        \item Iterates entries with \texttt{readdir()}, skipping \texttt{.} and \texttt{..}
+        \item Calls \texttt{lstat()} (not \texttt{stat()}) on each entry to avoid following symbolic links
+        \item For directories: recurses first, then checks if the directory itself matches
+        \item For files: checks criteria and adds matching files to the list
+        \item Always traverses the entire subtree regardless of matches
+    \end{itemize}
+
+    \item \textbf{Ancestor Marking:} When a file matches, \texttt{mark\_ancestors()} walks backward through the linked list to mark all ancestor directories as \texttt{is\_dir=2}, ensuring they appear in the output tree.
+
+    \item \textbf{Tree Output:} \texttt{print\_results()} iterates the linked list and prints only nodes with \texttt{is\_dir==2} (ancestor directories) and \texttt{is\_dir==0} (matching files). The indentation formula is: \texttt{|} followed by \texttt{(depth * 4 - 2)} dashes, then the entry name.
+
+    \item \textbf{Cleanup:} \texttt{free\_tree\_list()} frees all nodes and their \texttt{strdup}'ed names. This is called on all exit paths (normal, no match, SIGINT).
+\end{enumerate}
+
+%% ──────────────────────────────────────────────
+\section{Design Decisions}
+
+\subsection{Custom Regex Implementation (`+' Operator)}
+
+The assignment explicitly prohibits using \texttt{regcomp()}/\texttt{regexec()}. I implemented \texttt{match\_pattern()} as a linear two-pointer algorithm:
+
+\begin{itemize}[nosep]
+    \item \textbf{Pattern pointer (\texttt{pi})} and \textbf{string pointer (\texttt{si})} advance through their respective strings
+    \item When \texttt{pattern[pi+1] == '+'}: the character at \texttt{pattern[pi]} must appear one or more times. The algorithm consumes all consecutive matching characters, then advances \texttt{pi} by 2
+    \item When no \texttt{+} follows: a simple character-by-character comparison is performed
+    \item Both pointers must reach the end simultaneously for a full match
+    \item All comparisons use \texttt{tolower()} for case-insensitive matching
+\end{itemize}
+
+This approach handles multiple \texttt{+} operators (e.g., \texttt{los+t+file}) correctly and runs in $O(n)$ time.
+
+\subsection{lstat() vs stat()}
+
+\texttt{lstat()} is used instead of \texttt{stat()} throughout the program. This is essential because:
+
+\begin{itemize}[nosep]
+    \item \texttt{stat()} follows symbolic links and returns information about the target file
+    \item \texttt{lstat()} returns information about the link itself
+    \item This allows the \texttt{-t l} filter to correctly identify symbolic links
+\end{itemize}
+
+\subsection{Linked List for Tree Output}
+
+Instead of printing results immediately during traversal, all entries are collected in a linked list first. This two-pass approach was chosen because:
+
+\begin{itemize}[nosep]
+    \item The tree output requires knowing which directories are ancestors of matching files
+    \item A directory's relevance can only be determined after its entire subtree has been searched
+    \item This avoids printing directory paths that contain no matches
+\end{itemize}
+
+\subsection{Permission Parsing}
+
+The \texttt{parse\_permissions()} function converts a 9-character permission string (e.g., \texttt{rwxr-xr-{}-}) into a POSIX \texttt{mode\_t} bitmask by mapping each position to the corresponding \texttt{S\_IR*}, \texttt{S\_IW*}, \texttt{S\_IX*} constants. The comparison uses \texttt{st\_mode \& 0777} to isolate the standard permission bits (excluding setuid/setgid/sticky bits).
+
+\subsection{Signal Safety}
+
+The \texttt{SIGINT} handler only sets a \texttt{volatile sig\_atomic\_t} flag --- it does not call \texttt{printf()}, \texttt{free()}, or any other non-async-signal-safe function. The main program loop checks this flag and performs cleanup in normal execution context.
+
+\subsection{Memory Management}
+
+Every \texttt{malloc()} and \texttt{strdup()} call has a corresponding \texttt{free()} path:
+
+\begin{itemize}[nosep]
+    \item \texttt{add\_tree\_node()} allocates both the node and a copy of the name
+    \item \texttt{free\_tree\_list()} frees both in reverse
+    \item On allocation failure, partial allocations are immediately freed
+    \item \texttt{free\_tree\_list()} is called on all exit paths (normal, no match, SIGINT)
+\end{itemize}
+
+\subsection{System Call Error Handling}
+
+All system calls are checked for failure and the user is notified via \texttt{stderr}:
+
+\begin{itemize}[nosep]
+    \item \texttt{malloc()} / \texttt{strdup()} --- checked for \texttt{NULL}, reported with \texttt{perror()}
+    \item \texttt{sigaction()} --- checked for \texttt{-1} return, reported with \texttt{perror()}
+    \item \texttt{opendir()} --- checked for \texttt{NULL}, reported with \texttt{fprintf(stderr,...)} and \texttt{perror()}
+    \item \texttt{lstat()} --- checked for \texttt{-1} return, reported with \texttt{fprintf(stderr,...)} and \texttt{perror()}
+    \item \texttt{snprintf()} --- checked for path truncation, reported with \texttt{fprintf(stderr,...)}
+    \item \texttt{closedir()} --- checked for \texttt{-1} return, reported with \texttt{fprintf(stderr,...)} and \texttt{perror()}
+\end{itemize}
+
+%% ──────────────────────────────────────────────
+\section{Requirements Achieved}
+
+\begin{table}[h!]
+\centering
+\begin{tabular}{@{}clc@{}}
+\toprule
+\textbf{\#} & \textbf{Requirement} & \textbf{Status} \\
+\midrule
+1  & Recursive traversal of entire subtree & Achieved \\
+2  & \texttt{-f} filename filter with case-insensitive custom \texttt{+} regex & Achieved \\
+3  & \texttt{-b} file size filter (exact byte match) & Achieved \\
+4  & \texttt{-t} file type filter (d/f/l/b/c/p/s) & Achieved \\
+5  & \texttt{-p} permissions filter (9-character string) & Achieved \\
+6  & \texttt{-l} hard link count filter & Achieved \\
+7  & \texttt{-w} mandatory search path & Achieved \\
+8  & Multiple \texttt{+} operators in pattern (e.g., \texttt{los+t+file}) & Achieved \\
+9  & \texttt{getopt()} for argument parsing & Achieved \\
+10 & Tree-formatted output matching the example & Achieved \\
+11 & ``No file found'' message when no matches & Achieved \\
+12 & Error messages printed to stderr & Achieved \\
+13 & All system calls checked for failure & Achieved \\
+14 & Usage information on missing/invalid arguments & Achieved \\
+15 & CTRL-C (SIGINT) graceful exit with resource cleanup & Achieved \\
+16 & No memory leaks (verified with valgrind) & Achieved \\
+17 & No zombie processes (single-process, no fork) & Achieved \\
+18 & No deadlocks (no synchronization primitives used) & Achieved \\
+19 & Compilation with \texttt{-Wall} and zero warnings & Achieved \\
+20 & Makefile compiles only, does not run & Achieved \\
+21 & \texttt{lstat()} used to avoid following symbolic links & Achieved \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+%% ──────────────────────────────────────────────
+\section{Requirements Not Achieved}
+
+All requirements specified in the homework assignment have been successfully implemented. No known failures or missing features exist at the time of submission.
+
+%% ──────────────────────────────────────────────
+\section{Compilation and Testing}
+
+\subsection{Compilation}
+
+\begin{lstlisting}[language=bash,numbers=none]
+make
+# Equivalent to: gcc -Wall -o myFind myFind.c
+\end{lstlisting}
+
+\subsection{Test Examples}
+
+\begin{lstlisting}[language=bash,numbers=none]
+# Search for files matching 'lost+file' pattern
+./myFind -w /path/to/dir -f 'lost+file'
+
+# Search for regular files of exactly 100 bytes
+./myFind -w /path/to/dir -t f -b 100
+
+# Search for directories
+./myFind -w /path/to/dir -t d
+
+# Search for files with specific permissions
+./myFind -w /path/to/dir -p rwxr-xr--
+
+# Search for files with 3 hard links
+./myFind -w /path/to/dir -l 3
+
+# Search for symbolic links
+./myFind -w /path/to/dir -t l
+
+# Search for sockets
+./myFind -w /path/to/dir -t s
+
+# Search for named pipes (FIFOs)
+./myFind -w /path/to/dir -t p
+
+# Combined criteria
+./myFind -w /path/to/dir -f 'config+' -t f -b 0
+
+# Memory leak check
+valgrind --leak-check=full ./myFind -w /path/to/dir -t f
+\end{lstlisting}
+
+%% ──────────────────────────────────────────────
+\section{File Structure}
+
+\begin{lstlisting}[language={},numbers=none]
+myFind.c    -- Single source file containing all program logic
+Makefile    -- Compilation rules only (does not run the program)
+report.tex  -- LaTeX source of this report
+report.pdf  -- This design report (compiled from report.tex)
+\end{lstlisting}
+
+\end{document}
