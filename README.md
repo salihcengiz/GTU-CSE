@@ -44,15 +44,6 @@ Throughout my studies, I work with various technologies including:
 
 ---
 
-## ⚠️ Disclaimer
-
-This repository is for **educational purposes** and personal reference. If you're a fellow student:
-
-- ✅ Feel free to use these materials for **learning and reference**
-- ❌ Please **do not copy** assignments directly - academic integrity matters!
-- 💡 Use this repo as **inspiration** to develop your own solutions
-
----
 
 ## 📫 Contact
 
@@ -60,11 +51,5 @@ If you have any questions or want to connect:
 
 - **GitHub:** [@salihcengiz](https://github.com/salihcengiz)
 - **University Email:** s.cengiz2022@gtu.edu.tr
-
----
-
-## 📄 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ---
