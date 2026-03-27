@@ -1,0 +1,384 @@
+\documentclass[12pt,a4paper]{article}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage[margin=2.5cm]{geometry}
+\usepackage{graphicx}
+\usepackage{hyperref}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{booktabs}
+\usepackage{enumitem}
+\usepackage{fancyhdr}
+\usepackage{titlesec}
+
+\hypersetup{
+    colorlinks=true,
+    linkcolor=blue!70!black,
+    urlcolor=blue!70!black
+}
+
+\lstset{
+    basicstyle=\ttfamily\small,
+    backgroundcolor=\color{gray!8},
+    frame=single,
+    framerule=0.4pt,
+    rulecolor=\color{gray!40},
+    breaklines=true,
+    breakatwhitespace=true,
+    tabsize=4,
+    showstringspaces=false,
+    numbers=none,
+    xleftmargin=1em,
+    framexleftmargin=0.5em
+}
+
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\small CSE344 -- System Programming}
+\fancyhead[R]{\small Homework \#2}
+\fancyfoot[C]{\thepage}
+
+% Boş etiket {} kullanmayın: bölüm numarası yazılmaz ve içindekiler boş kalabilir.
+\titleformat{\section}{\large\bfseries}{\thesection\quad}{0em}{}[\titlerule]
+\titleformat{\subsection}{\normalsize\bfseries}{\thesubsection\quad}{0em}{}
+\setcounter{tocdepth}{3}
+
+% Görsel klasörü (çoğul: screenshots). Tek yerden değiştirmek için:
+\newcommand{\ScreenshotDir}{screenshots}
+
+% ------------------------------------------------------------------
+% Mandatory test screenshots: place files under screenshots/ (\ScreenshotDir)
+% Run: pdflatex report.tex   (from the same directory as report.tex)
+% Tries basenames #1, #2, #3 with .png then .pdf (see screenshots/README.txt)
+% Note: avoid # inside \texttt in macro bodies (breaks \@argdef); use plain text for hints.
+% ------------------------------------------------------------------
+% Her adım için sırayla dener: #1 ve #2 ve #3 taban adları; .png .jpg .jpeg .pdf
+% Linux'ta dosya adı büyük/küçük harfe duyarlı olabilir (ör. .PNG).
+\newcommand{\MandatoryFigThree}[4]{%
+\begin{figure}[htbp]
+\centering
+\IfFileExists{\ScreenshotDir/#1.png}{\includegraphics[width=0.95\textwidth]{\ScreenshotDir/#1.png}}{%
+\IfFileExists{\ScreenshotDir/#1.jpg}{\includegraphics[width=0.95\textwidth]{\ScreenshotDir/#1.jpg}}{%
+\IfFileExists{\ScreenshotDir/#1.jpeg}{\includegraphics[width=0.95\textwidth]{\ScreenshotDir/#1.jpeg}}{%
+\IfFileExists{\ScreenshotDir/#1.pdf}{\includegraphics[width=0.95\textwidth]{\ScreenshotDir/#1.pdf}}{%
+\IfFileExists{\ScreenshotDir/#1.PNG}{\includegraphics[width=0.95\textwidth]{\ScreenshotDir/#1.PNG}}{%
+\IfFileExists{\ScreenshotDir/#2.png}{\includegraphics[width=0.95\textwidth]{\ScreenshotDir/#2.png}}{%
+\IfFileExists{\ScreenshotDir/#2.jpg}{\includegraphics[width=0.95\textwidth]{\ScreenshotDir/#2.jpg}}{%
+\IfFileExists{\ScreenshotDir/#2.jpeg}{\includegraphics[width=0.95\textwidth]{\ScreenshotDir/#2.jpeg}}{%
+\IfFileExists{\ScreenshotDir/#2.pdf}{\includegraphics[width=0.95\textwidth]{\ScreenshotDir/#2.pdf}}{%
+\IfFileExists{\ScreenshotDir/#2.PNG}{\includegraphics[width=0.95\textwidth]{\ScreenshotDir/#2.PNG}}{%
+\IfFileExists{\ScreenshotDir/#3.png}{\includegraphics[width=0.95\textwidth]{\ScreenshotDir/#3.png}}{%
+\IfFileExists{\ScreenshotDir/#3.jpg}{\includegraphics[width=0.95\textwidth]{\ScreenshotDir/#3.jpg}}{%
+\IfFileExists{\ScreenshotDir/#3.jpeg}{\includegraphics[width=0.95\textwidth]{\ScreenshotDir/#3.jpeg}}{%
+\IfFileExists{\ScreenshotDir/#3.pdf}{\includegraphics[width=0.95\textwidth]{\ScreenshotDir/#3.pdf}}{%
+\IfFileExists{\ScreenshotDir/#3.PNG}{\includegraphics[width=0.95\textwidth]{\ScreenshotDir/#3.PNG}}{%
+\fbox{\parbox{0.9\textwidth}{\centering\vspace{1em}\small
+\textit{Missing image.} Put the screenshot in \texttt{\ScreenshotDir/} next to \texttt{report.tex}.
+Try basenames \texttt{\detokenize{#1}}, \texttt{\detokenize{#2}}, or \texttt{\detokenize{#3}}
+with extension \texttt{.png}, \texttt{.jpg}, \texttt{.jpeg}, or \texttt{.pdf}.
+Re-run \texttt{pdflatex} twice after adding files.\vspace{1em}}%
+}}}}}}}}}}}}}}}%
+}%
+\caption{#4}%
+\end{figure}%
+}
+
+\begin{document}
+
+% ============================================================
+% COVER PAGE
+% ============================================================
+\begin{titlepage}
+    \centering
+    \vspace*{3cm}
+
+    {\Large\textbf{Gebze Technical University}\\
+    Department of Computer Engineering}
+
+    \vspace{2cm}
+
+    {\LARGE\textbf{CSE344 -- System Programming\\Homework \#2}}
+
+    \vspace{1cm}
+
+    {\Large Signal Handling \& Process Management with \texttt{fork()}}
+
+    \vspace{3cm}
+
+    \begin{tabular}{rl}
+        \textbf{Name:}       & [Salih Cengiz] \\
+        \textbf{Student ID:} & [220104004007] \\
+        \textbf{Course:}     & CSE344 -- System Programming \\
+        \textbf{Date:}       & March 2026 \\
+    \end{tabular}
+
+    \vfill
+\end{titlepage}
+
+% İçindekiler: iki kez pdflatex gerekir (birinci .toc yazar, ikinci doldurur).
+\tableofcontents
+\newpage
+
+% ============================================================
+% 1. INTRODUCTION
+% ============================================================
+\section{Introduction}
+
+This report describes the design and implementation of \texttt{procSearch}, a multi-process file search tool written in C for Linux. The program accepts a root directory and a filename pattern, forks a configurable number of worker processes, and assigns each worker a partition of the directory tree to search recursively. Workers report results to the parent through signals, and the parent produces a final tree-formatted output with a summary.
+
+The program is built with a Makefile, compiles with \texttt{-Wall} with zero warnings, and runs on Debian 11 (64-bit). All inter-process communication relies on POSIX signals (\texttt{SIGUSR1}, \texttt{SIGINT}, \texttt{SIGTERM}, \texttt{SIGCHLD}) and temporary files for match data transfer.
+
+\subsection{Key Features}
+
+\begin{itemize}[noitemsep]
+    \item Custom pattern matching with \texttt{+} operator (one or more of the preceding character), implemented from scratch without any regex library
+    \item Round-robin directory partitioning among worker processes
+    \item Full signal handling with \texttt{sigaction()} and async-signal-safe handlers
+    \item Tree-formatted output with per-worker match summary
+    \item Zombie process prevention via \texttt{SIGCHLD} handler
+    \item Graceful shutdown on \texttt{SIGINT} (Ctrl+C)
+\end{itemize}
+
+% ============================================================
+% 2. DESIGN DECISIONS
+% ============================================================
+\section{Design Decisions}
+
+\subsection{Overall Architecture}
+
+The program follows a parent-worker model:
+
+\begin{lstlisting}
+Parent Process
+  |
+  |-- fork() --> Worker 0  (assigned: alpha, delta, ...)
+  |-- fork() --> Worker 1  (assigned: beta, ...)
+  |-- fork() --> Worker 2  (assigned: gamma, ...)
+  |
+  |-- wait for SIGUSR1 from all workers
+  |-- collect results from temp files
+  |-- print tree output and summary
+\end{lstlisting}
+
+The parent is responsible for argument parsing (\texttt{getopt}), directory partitioning, forking workers, waiting for completion, and producing the final output. Workers perform the actual recursive directory traversal and pattern matching.
+
+\subsection{Directory Partitioning}
+
+The \texttt{read\_subdirectories()} function reads the immediate children of the root directory using \texttt{opendir()}/\texttt{readdir()}. Only directories (checked via \texttt{stat()} and \texttt{S\_ISDIR}) are collected. These subdirectories are distributed among workers using round-robin assignment:
+
+\begin{lstlisting}
+subdirectory[i] --> worker[i % num_workers]
+\end{lstlisting}
+
+Two edge cases are handled:
+
+\begin{itemize}[noitemsep]
+    \item \textbf{Fewer subdirectories than workers:} The worker count is reduced to match the subdirectory count, and a notice is printed.
+    \item \textbf{No subdirectories at all:} The parent searches the root directory directly via \texttt{parent\_direct\_search()} without forking any workers.
+\end{itemize}
+
+\subsection{Pattern Matching Algorithm}
+
+The \texttt{match\_pattern()} / \texttt{match\_pattern\_at()} functions implement a custom pattern matching engine supporting the \texttt{+} operator. The algorithm performs substring matching (the pattern can match anywhere within the filename) and is case-insensitive (using \texttt{tolower()}).
+
+The \texttt{+} operator applies to the character immediately to its left and means ``one or more occurrences.'' For example, \texttt{rep+ort} matches \texttt{report}, \texttt{repport}, \texttt{reppport}, etc.
+
+A key design decision was implementing \textbf{backtracking} for the \texttt{+} operator. When a \texttt{c+} group is encountered:
+
+\begin{enumerate}[noitemsep]
+    \item All consecutive occurrences of \texttt{c} in the filename are consumed (greedy).
+    \item The remaining pattern is tested against the remaining filename.
+    \item If the test fails, the number of consumed characters is reduced by one and retried.
+    \item This continues until either a match is found or the minimum of 1 repetition is reached.
+\end{enumerate}
+
+This backtracking is essential for patterns like \texttt{er+ro+r} matching \texttt{error}, where \texttt{r+} must not consume both \texttt{r}s so that the subsequent literal \texttt{r} in the pattern can also match.
+
+The backtracking is implemented via recursion in \texttt{match\_pattern\_at()} --- when a \texttt{+} group is encountered, the function calls itself with the remaining pattern and each possible consumption length.
+
+\subsection{Signal Handling Strategy}
+
+All signal handlers are installed using \texttt{sigaction()} (not \texttt{signal()}) for reliable, portable behavior. The handlers are minimal and async-signal-safe:
+
+\begin{table}[h]
+\centering
+\begin{tabular}{@{}llp{7.5cm}@{}}
+\toprule
+\textbf{Signal} & \textbf{Handler} & \textbf{Behavior} \\
+\midrule
+\texttt{SIGUSR1} & \texttt{handle\_sigusr1} & Increments \texttt{finished\_worker\_count} (\texttt{volatile sig\_atomic\_t}) \\
+\texttt{SIGINT}  & \texttt{handle\_sigint}  & Sets \texttt{sigint\_received} flag \\
+\texttt{SIGTERM} & \texttt{handle\_sigterm} & Sets \texttt{sigterm\_received} flag (worker-side) \\
+\texttt{SIGCHLD} & \texttt{handle\_sigchld} & Calls \texttt{waitpid(-1, \&status, WNOHANG)} in a loop, records PID/status \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsubsection{Async-Signal-Safety Measures}
+
+\begin{itemize}[noitemsep]
+    \item \textbf{No \texttt{printf()}, \texttt{malloc()}, or \texttt{free()} inside any handler.} All handlers only modify \texttt{volatile sig\_atomic\_t} variables or call \texttt{waitpid()} (which is async-signal-safe).
+    \item \textbf{\texttt{errno} preservation:} The \texttt{SIGCHLD} handler saves and restores \texttt{errno} to avoid corrupting the main program's error state.
+    \item \textbf{\texttt{SA\_RESTART} is intentionally not used} for \texttt{SIGUSR1} and \texttt{SIGCHLD} handlers. This ensures that \texttt{sleep()} in the parent's wait loop is interrupted when a signal arrives, allowing the loop condition to be re-evaluated immediately.
+    \item \textbf{\texttt{SA\_NOCLDSTOP}} is set for \texttt{SIGCHLD} to avoid spurious signals when children are stopped (not terminated).
+\end{itemize}
+
+\subsubsection{Signal Flow}
+
+\begin{lstlisting}
+Worker finishes  --> SIGUSR1 --> Parent (increment counter)
+User Ctrl+C      --> SIGINT  --> Parent (send SIGTERM to all workers)
+Parent SIGTERM   --> SIGTERM --> Worker (stop, report partial results)
+Worker exits     --> SIGCHLD --> Parent (reap zombie, record status)
+\end{lstlisting}
+
+\subsection{Worker-Parent Communication}
+
+Workers communicate match results to the parent through temporary files:
+
+\begin{itemize}[noitemsep]
+    \item \textbf{Match data:} \texttt{/tmp/procSearch\_<PID>.tmp} --- one line per match in \texttt{path|size|worker\_pid} format
+    \item \textbf{Scan count:} \texttt{/tmp/procSearch\_<PID>\_info.tmp} --- contains the number of files scanned
+\end{itemize}
+
+This approach avoids the complexity of pipes or shared memory while being safe across process boundaries. The parent reads these files after all workers have finished and deletes them afterward.
+
+\subsection{Wait Loop Design}
+
+The parent waits for all workers using a \texttt{while} loop with \texttt{sleep(1)}:
+
+\begin{lstlisting}[language=C]
+while (finished_worker_count < total_worker_count &&
+       reaped_count < total_worker_count &&
+       !sigint_received) {
+    sleep(1);
+}
+\end{lstlisting}
+
+The loop checks two independent completion indicators:
+
+\begin{itemize}[noitemsep]
+    \item \texttt{finished\_worker\_count}: incremented by \texttt{SIGUSR1} handler
+    \item \texttt{reaped\_count}: incremented by \texttt{SIGCHLD} handler
+\end{itemize}
+
+This dual-condition approach provides robustness: even if a \texttt{SIGUSR1} signal is lost (e.g., due to signal coalescing), the \texttt{SIGCHLD}-based count ensures the parent eventually exits the loop.
+
+% ============================================================
+% 3. CHALLENGES AND SOLUTIONS
+% ============================================================
+\section{Challenges and Solutions}
+
+\subsection{Challenge 1: Parent Hanging in Wait Loop}
+
+\textbf{Problem:} The parent process would hang indefinitely in the wait loop, even after all workers had finished.
+
+\textbf{Root Cause:} \texttt{SA\_RESTART} was set for \texttt{SIGUSR1} and \texttt{SIGCHLD} handlers. When a signal arrived during \texttt{sleep(1)}, the kernel automatically restarted the \texttt{sleep()} call instead of returning, preventing the loop from re-evaluating its condition.
+
+\textbf{Solution:} Removed \texttt{SA\_RESTART} from \texttt{SIGUSR1} and \texttt{SIGCHLD} signal configurations. Now \texttt{sleep()} is interrupted by any signal, the function returns early, and the loop condition is checked immediately.
+
+\subsection{Challenge 2: Greedy Pattern Matching Without Backtracking}
+
+\textbf{Problem:} The \texttt{+} operator consumed all matching characters greedily with no way to try fewer matches. For example, \texttt{er+ro+r} failed to match \texttt{error} because \texttt{r+} consumed both \texttt{r} characters, leaving none for the subsequent literal \texttt{r} in the pattern.
+
+\textbf{Solution:} Implemented backtracking in \texttt{match\_pattern\_at()}. When a \texttt{c+} group is encountered, the function first finds the maximum number of matches, then tries each possible consumption count from maximum down to 1 by recursively calling itself with the remaining pattern.
+
+\subsection{Challenge 3: Duplicate Notice Messages After fork()}
+
+\textbf{Problem:} The notice message was printed multiple times --- once by the parent and once by each forked child.
+
+\textbf{Root Cause:} \texttt{stdout} is fully buffered when redirected to a pipe. The \texttt{printf()} output remained in the buffer when \texttt{fork()} was called, and each child inherited a copy of the buffer. When each child exited, its copy was flushed, producing duplicate output.
+
+\textbf{Solution:} Added \texttt{fflush(stdout)} immediately after printing the notice message and before any \texttt{fork()} call.
+
+\subsection{Challenge 4: Stack Overflow Risk}
+
+\textbf{Problem:} Several large arrays were allocated on the stack, risking stack overflow.
+
+\textbf{Solution:} Large arrays in \texttt{main()} and helper functions were declared \texttt{static}, moving them from the stack to the data segment. Additionally, \texttt{MAX\_DIRS\_PER\_WORKER} was set to 512 to limit per-worker memory footprint.
+
+\subsection{Challenge 5: Collecting Exit Status for Zero-Match Workers}
+
+\textbf{Problem:} Workers with 0 matches called \texttt{exit(0)}. The fallback \texttt{waitpid()} loop used \texttt{match\_count > 0} to determine if a worker was already collected, causing zero-match workers to be redundantly processed.
+
+\textbf{Solution:} Added a \texttt{collected} flag to the \texttt{WorkerInfo} struct. This flag is set when a worker's exit status is processed, regardless of the match count value.
+
+% ============================================================
+% 4. MANDATORY TEST SCENARIO (screenshots)
+% ============================================================
+\section{Mandatory Test Scenario}
+
+This section follows the assignment PDF \textit{Mandatory Test Scenario}. Screenshots are loaded from the \texttt{\ScreenshotDir/} folder next to \texttt{report.tex}. Compile with:
+
+\begin{verbatim}
+cd <HW2_directory>
+pdflatex report.tex
+pdflatex report.tex
+\end{verbatim}
+
+For each step, the first existing file among \texttt{StepN}, \texttt{stepN}, or \texttt{step-0N} with extension \texttt{.png} or \texttt{.pdf} is included. Rename your captures to match, or adjust the macro arguments in the source.
+
+\subsection{Step 1: Test directory tree under \texttt{/tmp/crawltest}}
+
+Create the directory structure and files as specified (e.g.\ \texttt{mkdir}, \texttt{echo}, \texttt{touch}). Capture terminal output showing the tree or \texttt{find}/\texttt{ls} listing.
+
+\MandatoryFigThree{Step1}{step1}{step-01}{Step 1: Directory tree and files under \texttt{/tmp/crawltest} as required by the assignment.}
+
+\subsection{Step 2: Basic search with \texttt{rep+ort}}
+
+Command (adjust pattern per instructor revision if needed):
+
+\begin{verbatim}
+./procSearch -d /tmp/crawltest -n 3 -f 'rep+ort'
+\end{verbatim}
+
+\MandatoryFigThree{Step2}{step2}{step-02}{Step 2: \texttt{procSearch} run showing live \texttt{MATCH} lines, tree output, and summary.}
+
+\subsection{Step 3: Size filter \texttt{-s 15}}
+
+\begin{verbatim}
+./procSearch -d /tmp/crawltest -n 3 -f 'rep+ort' -s 15
+\end{verbatim}
+
+\MandatoryFigThree{Step3}{step3}{step-03}{Step 3: Only files with size $\geq$ 15 bytes appear in results.}
+
+\subsection{Step 4: Pattern with no matches}
+
+\begin{verbatim}
+./procSearch -d /tmp/crawltest -n 3 -f 'xyz+123'
+\end{verbatim}
+
+\MandatoryFigThree{Step4}{step4}{step-04}{Step 4: Output shows \texttt{No matching files found.} and correct summary.}
+
+\subsection{Step 5: Large directory, \texttt{SIGINT}, and zombie check}
+
+\begin{verbatim}
+./procSearch -d /usr/share/doc -n 4 -f 'rep+ort'
+# While running: Ctrl+C, then:
+ps -ef | grep procSearch | grep -v grep
+\end{verbatim}
+
+\MandatoryFigThree{Step5}{step5}{step-05}{Step 5: \texttt{SIGINT} shutdown message, clean termination, and/or \texttt{ps} showing no leftover/zombie \texttt{procSearch} processes.}
+
+\subsection{Step 6: \texttt{stderr} / log evidence for signal-related behavior}
+
+Example (redirect stderr while testing):
+
+\begin{verbatim}
+./procSearch -d /tmp/crawltest -n 3 -f 'rep+ort' 2> run.stderr
+# Or strace (optional):
+strace -f -e trace=signal -o strace.log ./procSearch ...
+\end{verbatim}
+
+\MandatoryFigThree{Step6-sdterr}{Step6}{step6}{Step 6: \texttt{stderr} or terminal capture relevant to \texttt{SIGINT} handling and/or unexpected worker termination (\texttt{SIGCHLD} path), as applicable to your run.}
+
+% ============================================================
+% 5. CONCLUSION
+% ============================================================
+\section{Conclusion}
+
+The \texttt{procSearch} tool successfully implements all required features: custom pattern matching with backtracking, round-robin directory partitioning, multi-process search with \texttt{fork()}, comprehensive signal handling, and tree-formatted output. The program compiles with \texttt{-Wall} and zero warnings, correctly prevents zombie processes, and handles edge cases such as insufficient subdirectories and graceful shutdown via Ctrl+C. All signal handlers are async-signal-safe, using only \texttt{volatile sig\_atomic\_t} variables and async-signal-safe system calls.
+
+\end{document}
